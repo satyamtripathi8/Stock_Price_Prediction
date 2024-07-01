@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Price Predictor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f2f2f2;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    label, input, select, button {
+      display: block;
+      margin-bottom: 10px;
+    }
+    input[type="text"] {
+      width: calc(100% - 22px);
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    select {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 15px 20px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #prediction {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Stock Price Predictor</h1>
+    <form id="predict-form">
+      <label for="company">Select a company:</label>
+      <select id="company" name="company">
+        <option value="AAPL">Apple Inc. (AAPL)</option>
+        <option value="GOOG">Alphabet Inc. (GOOG)</option>
+        <option value="MSFT">Microsoft Corporation (MSFT)</option>
+        <!-- Add more options for other companies -->
+      </select>
+      <label for="data">Enter stock data (comma-separated):</label>
+      <input type="text" id="data" name="data" placeholder="e.g., 150.0, 152.5, 149.0, 200000">
+      <button type="submit">Predict</button>
+    </form>
+    <div id="prediction"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('predict-form');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); // Prevent default form submission
+      
+      const company = document.getElementById('company').value;
+      const dataInput = document.getElementById('data').value.trim();
+      
+      // Validate input format
+      if (!dataInput) {
+        alert('Please enter stock data in the format: open, high, low, volume');
+        return;
+      }
+      
+      const data = dataInput.split(',').map(value => parseFloat(value.trim()));
+      
+      if (data.length !== 4 || data.some(isNaN)) {
+        alert('Please enter valid stock data in the format: open, high, low, volume');
+        return;
+      }
+
+      try {
+        const response = await fetch('/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ company, values: data }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch prediction');
+        }
+
+        const prediction = await response.json();
+        document.getElementById('prediction').innerHTML = `Predicted stock price for ${company}: <span style="color: #4CAF50;">$${prediction.prediction.toFixed(2)}</span>`;
+      } catch (error) {
+        console.error('Prediction request failed:', error);
+        alert('Prediction request failed. Please try again later.');
+      }
+    });
+  </script>
+</body>
+</html>
